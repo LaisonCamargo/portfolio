@@ -1,0 +1,32 @@
+import psutil
+import socket
+
+def scan_system():
+    print("--- Iniciando Varredura de Segurança Básica ---\n")
+
+    print(f"{'PID':<10} | {'Nome do Processo':<25} | {'Status':<15}") # Analisa processos suspeitos
+    print("-" * 55)
+
+    for proc in psutil.process_iter(['pid', 'name', 'status']):
+        try:
+            info = proc.info
+            if info['status'] == psutil.STATUS_RUNNING:
+                print(f"{info['pid']:<10} | {info['name']:<25} | {info['status']:<15}")
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            pass
+
+    print("\n--- Analisando Conexões de Rede Ativas ---")
+    print(f"{'Local':<25} | {'Remoto (C2?)':<25} | {'Status':<15}")
+    print("-" * 70)
+
+    connections = psutil.net_connections(kind='inet')
+    for conn in connections:
+        if conn.status == 'ESTABLISHED':
+            laddr = f"{conn.laddr.ip}:{conn.laddr.port}"
+            raddr = f"{conn.raddr.ip}:{conn.raddr.port}" if conn.raddr else "N/A"
+            print(f"{laddr:<25} | {raddr:<25} | {conn.status:<15}")
+
+
+if __name__ == "__main__":
+    scan_system()
+    input("\n -- Varredura concluída. pressione Enter para fechar essa janela --")
